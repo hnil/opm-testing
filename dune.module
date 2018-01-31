@@ -1,0 +1,13 @@
+####################################################################
+# Dune module information file: This file gets parsed by dunecontrol
+# and by the CMake build scripts.
+####################################################################
+
+Module: opm-testing
+Description: Simulators and utilities for automatic differentiation
+Version: 2018.04-pre
+Label: 2018.04-pre
+Maintainer: atgeirr@sintef.no
+MaintainerName: Atgeirr F. Rasmussen
+Url: http://opm-project.org
+Depends: dune-istl (>= 2.4) opm-common opm-parser opm-output opm-material opm-grid ewoms
