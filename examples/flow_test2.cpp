@@ -52,7 +52,7 @@
 namespace Ewoms {
 namespace Properties {
 //NEW_TYPE_TAG(EclFlowProblem, INHERITS_FROM(BlackOilModel, EclBaseProblem));
-SET_BOOL_PROP(EclFlowProblem, EnableStorageCache, false);
+SET_BOOL_PROP(EclFlowProblem, EnableStorageCache, true);
 SET_BOOL_PROP(EclFlowProblem, EnableIntensiveQuantityCache, true);
 }}
 namespace detail
