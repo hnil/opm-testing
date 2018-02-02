@@ -39,7 +39,7 @@
 
 //#include <opm/common/ResetLocale.hpp>
 #include <dune/grid/CpGrid.hpp>
-#include <opm/autodiff/SimulatorFullyImplicitBlackoilEbos.hpp>
+//#include <opm/autodiff/SimulatorFullyImplicitBlackoilEbos.hpp>
 #include <opm/autodiff/FlowMainEbos.hpp>
 
 

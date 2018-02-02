@@ -26,6 +26,27 @@
 # originally generated with the command:
 # find opm -name '*.c*' -printf '\t%p\n' | sort
 list (APPEND MAIN_SOURCE_FILES
+#    opm/core/simulator/BlackoilState.cpp
+#    opm/core/simulator/TwophaseState.cpp
+#    opm/core/simulator/SimulatorReport.cpp
+#    opm/core/utility/Event.cpp
+#    opm/core/utility/miscUtilities.cpp
+#    opm/core/utility/miscUtilitiesBlackoil.cpp
+#    opm/core/utility/NullStream.cpp
+#    opm/core/wells/InjectionSpecification.cpp
+#    opm/core/wells/ProductionSpecification.cpp
+#    opm/core/wells/WellCollection.cpp
+#    opm/core/wells/WellsGroup.cpp
+#    opm/core/wells/WellsManager.cpp
+#    opm/core/wells/well_controls.c
+#    opm/core/wells/wells.c
+#    opm/simulators/ensureDirectoryExists.cpp
+#    opm/simulators/SimulatorCompressibleTwophase.cpp
+#    opm/simulators/WellSwitchingLogger.cpp
+#    opm/simulators/vtk/writeVtkData.cpp
+#    opm/simulators/timestepping/TimeStepControl.cpp
+#    opm/simulators/timestepping/AdaptiveSimulatorTimer.cpp
+#    opm/simulators/timestepping/SimulatorTimer.cpp
   )
 
 
