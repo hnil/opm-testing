@@ -28,7 +28,7 @@
 
 #include <opm/autodiff/MissingFeatures.hpp>
 #include <opm/common/utility/parameters/ParameterGroup.hpp>
-#include <opm/common/utility/ResetLocale.hpp>
+#include <opm/material/common/ResetLocale.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -38,7 +38,7 @@
 
 
 //#include <opm/common/ResetLocale.hpp>
-#include <dune/grid/CpGrid.hpp>
+//#include <dune/grid/CpGrid.hpp>
 //#include <opm/autodiff/SimulatorFullyImplicitBlackoilEbos.hpp>
 #include <opm/autodiff/FlowMainEbos.hpp>
 
@@ -198,12 +198,16 @@ int main(int argc, char** argv)
         else if( phases.size() == 3 ) {
 
             typedef TTAG(EclFlowProblem) TypeTag;
-            typedef GET_PROP_TYPE(TypeTag, GridManager) GridManager;
             //Opm::Deck de = *deck;
             //Opm::EclipseState ecl=*eclipseState;
             //Opm::Schedule sch=*schedule;
             //Opm::SummaryConfig sum=*summary_config;
-            GridManager::setExternalDeck( deck.get(), eclipseState.get(), schedule.get(), summary_config.get());
+            typedef GET_PROP_TYPE(TypeTag, Vanguard) Vanguard;
+            //Opm::Deck de = *deck;
+            //Opm::EclipseState ecl=*eclipseState;
+            //Opm::Schedule sch=*schedule;
+            //Opm::SummaryConfig sum=*summary_config;
+            Vanguard::setExternalDeck(deck.get(), eclipseState.get(), schedule.get(), summary_config.get());
             //Opm::flowEbosBlackoilSetDeck(*deck, *eclipseState, *schedule, *summary_config);
             Opm::FlowMainEbos<TTAG(EclFlowProblem)> mainfunc;
             return mainfunc.execute(argc, argv);
