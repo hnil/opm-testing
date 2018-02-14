@@ -56,6 +56,7 @@ namespace Properties {
 //NEW_TYPE_TAG(EclFlowProblem, INHERITS_FROM(BlackOilModel, EclBaseProblem));
 SET_BOOL_PROP(EclFlowProblem, EnableStorageCache, false);
 SET_BOOL_PROP(EclFlowProblem, EnableIntensiveQuantityCache, true);
+SET_INT_PROP(EclFlowProblem, numAdjoint, 1);
 }}
 namespace detail
 {
