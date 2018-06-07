@@ -58,6 +58,29 @@ SET_BOOL_PROP(EclFlowProblem, EnableStorageCache, false);
 SET_BOOL_PROP(EclFlowProblem, EnableIntensiveQuantityCache, true);
 SET_INT_PROP(EclFlowProblem, numAdjoint, 1);
 }}
+namespace Ewoms {
+namespace Properties {
+NEW_TYPE_TAG(EclFlowOilWaterProblem, INHERITS_FROM(EclFlowProblem));
+
+//! The indices required by the model
+SET_PROP(EclFlowOilWaterProblem, Indices)
+{
+private:
+    // it is unfortunately not possible to simply use 'TypeTag' here because this leads
+    // to cyclic definitions of some properties. if this happens the compiler error
+    // messages unfortunately are *really* confusing and not really helpful.
+    typedef TTAG(EclFlowProblem) BaseTypeTag;
+    typedef typename GET_PROP_TYPE(BaseTypeTag, FluidSystem) FluidSystem;
+
+public:
+    typedef Ewoms::BlackOilTwoPhaseIndices<GET_PROP_VALUE(TypeTag, EnableSolvent),
+                                           GET_PROP_VALUE(TypeTag, EnablePolymer),
+                                           GET_PROP_VALUE(TypeTag, EnableEnergy),
+                                           /*PVOffset=*/0,
+                                           /*disabledCompIdx=*/FluidSystem::gasCompIdx> type;
+};
+}}
+
 namespace detail
 {
     boost::filesystem::path simulationCaseName( const std::string& casename ) {
@@ -163,25 +186,29 @@ int main(int argc, char** argv)
         std::shared_ptr<Opm::SummaryConfig> summary_config = std::make_shared<Opm::SummaryConfig>(*deck, *schedule, eclipseState->getTableManager(), parseContext);
                 // Twophase cases
         if( phases.size() == 2 ) {
-            std::cout << "This is only for trephase case to avoid compile time" << std::endl;
-            return EXIT_FAILURE;
-//            // oil-gas
-//            if (phases.active( Opm::Phase::GAS ))
-//            {
-//                Opm::flowEbosGasOilSetDeck(*deck, *eclipseState, *schedule, *summary_config);
-//                return Opm::flowEbosGasOilMain(argc, argv);
-//            }
-//            // oil-water
-//            else if ( phases.active( Opm::Phase::WATER ) )
-//            {
-//                Opm::flowEbosOilWaterSetDeck(*deck, *eclipseState, *schedule, *summary_config);
-//                return Opm::flowEbosOilWaterMain(argc, argv);
-//            }
-//            else {
-//                if (outputCout)
-//                    std::cerr << "No suitable configuration found, valid are Twophase (oilwater and oilgas), polymer, solvent, or blackoil" << std::endl;
-//                return EXIT_FAILURE;
-//            }
+
+            // oil-gas
+            if (phases.active( Opm::Phase::GAS ))
+            {
+                std::cout << "This is only for twophase oil water case to avoid compile time" << std::endl;
+                return EXIT_FAILURE;
+                //Opm::flowEbosGasOilSetDeck(*deck, *eclipseState, *schedule, *summary_config);
+                //return Opm::flowEbosGasOilMain(argc, argv);
+            }
+            // oil-water
+            else if ( phases.active( Opm::Phase::WATER ) )
+            {
+                typedef TTAG(EclFlowOilWaterProblem) TypeTag;
+                typedef GET_PROP_TYPE(TypeTag, Vanguard) Vanguard;
+                Vanguard::setExternalDeck(deck.get(), eclipseState.get(), schedule.get(), summary_config.get());
+                Opm::FlowMainEbos<TTAG(EclFlowOilWaterProblem)> mainfunc;
+                return mainfunc.execute(argc, argv);
+            }
+            else {
+                if (outputCout)
+                    std::cerr << "No suitable configuration found, valid are Twophase (oilwater and oilgas), polymer, solvent, or blackoil" << std::endl;
+                return EXIT_FAILURE;
+            }
         }
         // Polymer case
         else if ( phases.active( Opm::Phase::POLYMER ) ) {
@@ -199,19 +226,19 @@ int main(int argc, char** argv)
         }
         // Blackoil case
         else if( phases.size() == 3 ) {
-
+            std::cout << "This is only for twophase case to avoid compile time" << std::endl;
+            return EXIT_FAILURE;
             typedef TTAG(EclFlowProblem) TypeTag;
             typedef GET_PROP_TYPE(TypeTag, Vanguard) Vanguard;
             //Opm::Deck de = *deck;
             //Opm::EclipseState ecl=*eclipseState;
             //Opm::Schedule sch=*schedule;
             //Opm::SummaryConfig sum=*summary_config;
-            Vanguard::setExternalDeck(deck.get(), eclipseState.get(), schedule.get(), summary_config.get());
+            //Vanguard::setExternalDeck(deck.get(), eclipseState.get(), schedule.get(), summary_config.get());
 
-            //Opm::flowEbosBlackoilSetDeck(deck.get(), eclipseState.get(), schedule.get(), summary_config.get());
-            //return flowEbosBlackoilMain(argc, argv);
-            Opm::FlowMainEbos<TTAG(EclFlowProblem)> mainfunc;
-            return mainfunc.execute(argc, argv);
+            //Opm::flowEbosBlackoilSetDeck(*deck, *eclipseState, *schedule, *summary_config);
+            //Opm::FlowMainEbos<TTAG(EclFlowProblem)> mainfunc;
+            //return mainfunc.execute(argc, argv);
 
         }
         else

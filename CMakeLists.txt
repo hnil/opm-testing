@@ -63,7 +63,6 @@ include (OpmInit)
 
 # Look for the opm-data repository; if found the variable
 # HAVE_OPM_DATA will be set to true.
-include( Findopm-data )
 
 # list of prerequisites for this particular project; this is in a
 # separate file (in cmake/Modules sub-directory) because it is shared

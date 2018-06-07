@@ -39,14 +39,13 @@ set (opm-testing_DEPS
   "SuperLU"
   # OPM dependency
   "opm-common REQUIRED"
-  "opm-parser REQUIRED"
   "opm-material REQUIRED"
   "opm-grid REQUIRED"
-  "opm-output REQUIRED"
   "ewoms REQUIRED"
   "opm-simulators REQUIRED"
   # Eigen
   "Eigen3 3.2.0"
+  "amgcl REQUIRED"
   )
 
 find_package_deps(opm-testing)
