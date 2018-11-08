@@ -98,4 +98,17 @@ endmacro (tests_hook)
 include (OpmLibMain)
 
 
+opm_add_test(flow_simple
+  ONLY_COMPILE
+  ALWAYS_ENABLE
+  DEPENDS "opmsimulators"
+  LIBRARIES "opmsimulators"
+  SOURCES
+    examples/flow_simple.cpp)
+
+
+install(TARGETS flow_simple DESTINATION bin)
+
+include(OpmBashCompletion)
+opm_add_bash_completion(flow_simple)
 
