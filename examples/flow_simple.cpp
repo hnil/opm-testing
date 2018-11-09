@@ -41,7 +41,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
-
+#include <opm/material/fluidsystems/BlackOilFluidSystemSimple.hpp>
 #if HAVE_DUNE_FEM
 #include <dune/fem/misc/mpimanager.hh>
 #else
@@ -52,11 +52,12 @@ namespace Properties {
 SET_PROP(EclFlowProblem, FluidSystem)
 {
 private:
+//typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
 
 public:
-    typedef Opm::BlackOilFluidSystem<Scalar> type;
+    typedef Opm::BlackOilFluidSystemSimple<Scalar> type;
 };
 //NEW_TYPE_TAG(EclFlowProblem, INHERITS_FROM(BlackOilModel, EclBaseProblem));
 SET_BOOL_PROP(EclFlowProblem, EnableStorageCache, true);
@@ -81,12 +82,12 @@ END_PROPERTIES
 
 namespace Opm {
 
-void flowEbosBlackoilSetDeck(Deck &deck, EclipseState& eclState, Schedule& schedule, SummaryConfig& summaryConfig)
+  void flowEbosBlackoilSetDeck(Deck &deck, EclipseState& eclState)
 {
     typedef TTAG(EclFlowProblem) TypeTag;
     typedef GET_PROP_TYPE(TypeTag, Vanguard) Vanguard;
 
-    Vanguard::setExternalDeck(&deck, &eclState, &schedule, &summaryConfig);
+    Vanguard::setExternalDeck(&deck, &eclState);
 }
 
 // ----------------- Main program -----------------
@@ -217,10 +218,8 @@ int main(int argc, char** argv)
       const auto& phases = runspec.phases();
 
       std::shared_ptr<Opm::EclipseState> eclipseState = std::make_shared< Opm::EclipseState > ( *deck, parseContext );
-      std::shared_ptr<Opm::Schedule> schedule = std::make_shared<Opm::Schedule>(*deck, eclipseState->getInputGrid(), eclipseState->get3DProperties(), phases, parseContext);
-      std::shared_ptr<Opm::SummaryConfig> summary_config = std::make_shared<Opm::SummaryConfig>(*deck, *schedule, eclipseState->getTableManager(), parseContext);
       if( phases.size() == 3 ) {
-        Opm::flowEbosBlackoilSetDeck(*deck, *eclipseState, *schedule, *summary_config);
+        Opm::flowEbosBlackoilSetDeck(*deck, *eclipseState);
         return Opm::flowEbosBlackoilMain(argc, argv);
       }else{
         if (outputCout)
