@@ -41,7 +41,13 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
+
 #include <opm/material/fluidsystems/BlackOilFluidSystemSimple.hpp>
+#include <opm/material/fluidsystems/BlackOilFluidSystemSimple.hpp> 
+#include <ewoms/models/blackoil/blackoilintensivequantities.hh>
+#include <opm/material/fluidstates/BlackOilFluidState.hpp>
+//#include <opm/material/fluidstates/BlackOilFluidStateSimple.hpp>
+
 #if HAVE_DUNE_FEM
 #include <dune/fem/misc/mpimanager.hh>
 #else
@@ -49,6 +55,12 @@
 #endif
 namespace Ewoms {
 namespace Properties {
+
+
+  //    typedef Opm::BlackOilFluidState<Evaluation, FluidSystem, enableTemperature, enableEnergy, compositionSwitchEnabled,  Indices::numPhases > FluidState;  
+
+
+  
 SET_PROP(EclFlowProblem, FluidSystem)
 {
 private:
@@ -60,6 +72,8 @@ public:
     typedef Opm::BlackOilFluidSystemSimple<Scalar> type;
 };
 //NEW_TYPE_TAG(EclFlowProblem, INHERITS_FROM(BlackOilModel, EclBaseProblem));
+SET_TYPE_PROP(EclFlowProblem, IntensiveQuantities, Ewoms::BlackOilIntensiveQuantities<TypeTag>);
+  //SET_TAG_PROP(EclFlowProblem, FluidState, Opm::BlackOilFluidState);  
 SET_BOOL_PROP(EclFlowProblem, EnableStorageCache, true);
 SET_BOOL_PROP(EclFlowProblem, EnableIntensiveQuantityCache, true);
 //SET_INT_PROP(EclFlowProblem, numAdjoint, 1);
