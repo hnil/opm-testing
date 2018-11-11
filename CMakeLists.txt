@@ -106,8 +106,17 @@ opm_add_test(flow_simple
   SOURCES
     examples/flow_simple.cpp)
 
+opm_add_test(fluid_test
+  ONLY_COMPILE
+  ALWAYS_ENABLE
+  DEPENDS "opmsimulators"
+  LIBRARIES "opmsimulators"
+  SOURCES
+    examples/fluid_test)	
 
 install(TARGETS flow_simple DESTINATION bin)
+install(TARGETS fluid_test DESTINATION bin)
+	
 
 include(OpmBashCompletion)
 opm_add_bash_completion(flow_simple)
