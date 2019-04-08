@@ -46,40 +46,60 @@
 #include <opm/material/fluidsystems/BlackOilFluidSystemSimple.hpp> 
 #include <ewoms/models/blackoil/blackoilintensivequantities.hh>
 #include <opm/material/fluidstates/BlackOilFluidState.hpp>
-//#include <opm/material/fluidstates/BlackOilFluidStateSimple.hpp>
+#include <opm/material/fluidstates/BlackOilFluidStateSimple.hpp>
 
 #if HAVE_DUNE_FEM
 #include <dune/fem/misc/mpimanager.hh>
 #else
 #include <dune/common/parallel/mpihelper.hh>
 #endif
-namespace Ewoms {
-namespace Properties {
 
-
-  //    typedef Opm::BlackOilFluidState<Evaluation, FluidSystem, enableTemperature, enableEnergy, compositionSwitchEnabled,  Indices::numPhases > FluidState;  
-
-
-  
-SET_PROP(EclFlowProblem, FluidSystem)
-{
-private:
-//typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
-
-public:
-    typedef Opm::BlackOilFluidSystemSimple<Scalar> type;
+BEGIN_PROPERTIES
+NEW_TYPE_TAG(EclFlowProblemSimple, INHERITS_FROM(EclFlowProblem));
+NEW_PROP_TAG(FluidState);
+//SET_TYPE_PROP(EclBaseProblem, Problem, Ewoms::EclProblem<TypeTag>);
+SET_PROP(EclFlowProblemSimple, FluidState)
+    {
+    private:
+      typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+      typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+      enum { enableTemperature = GET_PROP_VALUE(TypeTag, EnableTemperature) };
+      enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
+      enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+      enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+      typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+      typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
+      static const bool compositionSwitchEnabled = Indices::gasEnabled;
+ 
+    public:
+//typedef Opm::BlackOilFluidSystemSimple<Scalar> type;
+       typedef Opm::BlackOilFluidStateSimple<Evaluation, FluidSystem, enableTemperature, enableEnergy, compositionSwitchEnabled,  Indices::numPhases > type;
 };
-//NEW_TYPE_TAG(EclFlowProblem, INHERITS_FROM(BlackOilModel, EclBaseProblem));
-SET_TYPE_PROP(EclFlowProblem, IntensiveQuantities, Ewoms::BlackOilIntensiveQuantities<TypeTag>);
-  //SET_TAG_PROP(EclFlowProblem, FluidState, Opm::BlackOilFluidState);  
-SET_BOOL_PROP(EclFlowProblem, EnableStorageCache, true);
-SET_BOOL_PROP(EclFlowProblem, EnableIntensiveQuantityCache, true);
-//SET_INT_PROP(EclFlowProblem, numAdjoint, 1);
-//SET_BOOL_PROP(EclFlowProblem, EnableStorageCache, true);
-//SET_BOOL_PROP(EclFlowProblem, EnableIntensiveQuantityCache, true);
-}}
+END_PROPERTIES
+
+namespace Ewoms {
+  namespace Properties {
+
+    SET_PROP(EclFlowProblemSimple, FluidSystem)
+    {
+    private:
+      //typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+      typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+      typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
+
+    public:
+        typedef Opm::BlackOilFluidSystemSimple<Scalar> type;
+    };
+    //NEW_TYPE_TAG(EclFlowProblem, INHERITS_FROM(BlackOilModel, EclBaseProblem));
+    SET_TYPE_PROP(EclFlowProblemSimple, IntensiveQuantities, Ewoms::BlackOilIntensiveQuantities<TypeTag>);
+    //SET_TAG_PROP(EclFlowProblem, FluidState, Opm::BlackOilFluidState);  
+    SET_BOOL_PROP(EclFlowProblemSimple, EnableStorageCache, true);
+    SET_BOOL_PROP(EclFlowProblemSimple, EnableIntensiveQuantityCache, true);
+    //SET_INT_PROP(EclFlowProblem, numAdjoint, 1);
+    //SET_BOOL_PROP(EclFlowProblem, EnableStorageCache, true);
+    //SET_BOOL_PROP(EclFlowProblem, EnableIntensiveQuantityCache, true);
+  }
+}
 
 
 
@@ -89,7 +109,7 @@ BEGIN_PROPERTIES
 
 // this is a dummy type tag that is used to setup the parameters before the actual
 // simulator.
-NEW_TYPE_TAG(FlowEarlyBird, INHERITS_FROM(EclFlowProblem));
+NEW_TYPE_TAG(FlowEarlyBird, INHERITS_FROM(EclFlowProblemSimple));
 
 END_PROPERTIES
 
@@ -98,7 +118,7 @@ namespace Opm {
 
   void flowEbosBlackoilSetDeck(Deck &deck, EclipseState& eclState)
 {
-    typedef TTAG(EclFlowProblem) TypeTag;
+    typedef TTAG(EclFlowProblemSimple) TypeTag;
     typedef GET_PROP_TYPE(TypeTag, Vanguard) Vanguard;
 
     Vanguard::setExternalDeck(&deck, &eclState);
@@ -117,7 +137,7 @@ int flowEbosBlackoilMain(int argc, char** argv)
     Dune::MPIHelper::instance(argc, argv);
 #endif
 
-    Opm::FlowMainEbos<TTAG(EclFlowProblem)> mainfunc;
+    Opm::FlowMainEbos<TTAG(EclFlowProblemSimple)> mainfunc;
     return mainfunc.execute(argc, argv);
 }
 

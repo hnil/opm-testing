@@ -222,15 +222,16 @@ int main(int argc, char **argv)
     tmp.push_back(ParseModePair(Opm::ParseContext::SUMMARY_UNKNOWN_WELL, Opm::InputError::WARN));
     tmp.push_back(ParseModePair(Opm::ParseContext::SUMMARY_UNKNOWN_GROUP, Opm::InputError::WARN));
     Opm::ParseContext parseContext(tmp);
-
-    Opm::Deck deck = parser.parseFile(deckFilename , parseContext);
+    Opm::ErrorGuard errorGuard;
+    
+    Opm::Deck deck = parser.parseFile(deckFilename , parseContext, errorGuard);
     Opm::checkDeck(deck, parser);
     Opm::MissingFeatures::checkKeywords(deck);
     
     Opm::Runspec runspec( deck );
     const auto& phases = runspec.phases();
 
-    Opm::EclipseState eclipseState( deck, parseContext );
+    Opm::EclipseState eclipseState( deck);
 
     Opm::BlackOilFluidSystem<double> fluidsystem;
     fluidsystem.initFromDeck(deck,eclipseState);
