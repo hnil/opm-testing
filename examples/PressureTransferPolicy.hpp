@@ -84,22 +84,28 @@ namespace Opm
       }
 
       // compleately unsafe!!!!!!
-      // void calculateCoarseEntries(const FineOperator& fineOperator)//const M& fineMatrix)
-      // {
-      // 	const auto& fineMatrix = fineOperator.getmat();
-      // 	*coarseLevelMatrix_ = 0;
-      //   for(auto row = fineMatrix.begin(), rowEnd = fineMatrix.end();
-      //       row != rowEnd; ++row)
-      // 	  {
-      //       const auto& i = row.index();
-      // 	    for(auto entry = row->begin(), entryEnd = row->end();
-      // 		entry != entryEnd; ++entry)
-      // 	      {
-      // 		const auto& j = entry.index();
-      // 		(*coarseLevelMatrix_)[i][j] += (*entry)[COMPONENT_INDEX][VARIABLE_INDEX];
-      // 	      }
-      // 	  }
-      // }
+      void calculateCoarseEntries(const FineOperator& fineOperator)//const M& fineMatrix)
+      {
+      	const auto& fineMatrix = fineOperator.getmat();
+      	*coarseLevelMatrix_ = 0;
+        for(auto row = fineMatrix.begin(), rowEnd = fineMatrix.end();
+            row != rowEnd; ++row)
+      	  {
+            const auto& i = row.index();
+      	    for(auto entry = row->begin(), entryEnd = row->end();
+      		entry != entryEnd; ++entry)
+      	      {
+		double matrix_el = 0;
+		auto bw = weights_[i];
+		for(int ii = 0; ii < bw.size(); ++ii ){
+		  matrix_el += (*entry)[ii][VARIABLE_INDEX]*bw[ii];
+		}		
+      		const auto& j = entry.index();
+		(*coarseLevelMatrix_)[i][j] = matrix_el;
+      		//(*coarseLevelMatrix_)[i][j] += (*entry)[COMPONENT_INDEX][VARIABLE_INDEX];
+      	      }
+      	  }
+      }
 
       void moveToCoarseLevel(const typename FatherType::FineRangeType& fine)
       {
