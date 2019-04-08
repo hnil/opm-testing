@@ -213,6 +213,7 @@ int main(int argc, char **argv)
     using FineOperatorType = Dune::MatrixAdapter<MatrixType,VectorType,VectorType>;
     using FineSmootherType = Dune::SeqILU0<MatrixType, VectorType, VectorType>;
     using CoarseSmootherType = Dune::SeqILU0<PressureMatrixType, PressureVectorType, PressureVectorType>;
+    //using CoarseSmootherType = Dune::SeqGS<PressureMatrixType, PressureVectorType, PressureVectorType>;
     //FineSmootherType finesmoother(matrix, 1.0);
     std::shared_ptr<FineSmootherType> finesmoother = std::make_shared<FineSmootherType>(matrix,1.0);
     
@@ -227,8 +228,8 @@ int main(int argc, char **argv)
     criterion.setDefaultValuesIsotropic(2);
     criterion.setNoPostSmoothSteps( 1 );
     criterion.setNoPreSmoothSteps( 1 );
-    using Smoother = FineSmootherType;
-    typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments  SmootherArgs;
+    //using Smoother = FineSmootherType;
+    typedef typename Dune::Amg::SmootherTraits<CoarseSmootherType>::Arguments  SmootherArgs;
     SmootherArgs  smootherArgs;
     smootherArgs.iterations = 1;
     //smootherArgs.relaxationFactor = relax; // seemed to not be set
