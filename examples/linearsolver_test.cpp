@@ -130,7 +130,7 @@ int main(int argc, char **argv)
   
   std::string rhsfile(inputprefix + "_rhs_istl.txt");
   std::string matrixfile(inputprefix + "_matrix_istl.txt");
-  std::string resultfile(outputdir + "/opm_result.txt");
+  std::string resultfile(outputdir + "/opm_result");
   Dune::MPIHelper::instance(argc, argv);
   std::cout << std::setprecision(std::numeric_limits<long double>::digits10 + 1);
   std::cout << "Rhs file " << rhsfile << std::endl;
@@ -179,27 +179,34 @@ int main(int argc, char **argv)
     double time = perfTimer.stop();
     std::cout << "Solve seqilu0 bicgstab time was " << time << std::endl;
     printRes(res);
+    {
+      std::ofstream outfile(resultfile + "_bicg_ilu0_" + ".txt");
+      if(!outfile){
+	throw std::runtime_error("Can not write file");
+      }
+      Dune::writeMatrixMarket(x,outfile);
+    }
   }
-  {
-    Dune::Timer perfTimer;
-    perfTimer.start();
-    Dune::SeqGS<MatrixType, VectorType, VectorType> preconditioner(matrix, 1, 1.0);
-    Dune::MatrixAdapter<MatrixType, VectorType, VectorType> linearOperator(matrix);
-    Dune::BiCGSTABSolver<VectorType> linsolver(linearOperator,
-					       preconditioner,
-					       vm["tol"].as<double>(), // desired residual reduction factor
-					       vm["maxiter"].as<int>(), // maximum number of iterations
-					       vm["v"].as<int>()); // verbosity of the solver */
+  // {
+  //   Dune::Timer perfTimer;
+  //   perfTimer.start();
+  //   Dune::SeqGS<MatrixType, VectorType, VectorType> preconditioner(matrix, 1, 1.0);
+  //   Dune::MatrixAdapter<MatrixType, VectorType, VectorType> linearOperator(matrix);
+  //   Dune::BiCGSTABSolver<VectorType> linsolver(linearOperator,
+  // 					       preconditioner,
+  // 					       vm["tol"].as<double>(), // desired residual reduction factor
+  // 					       vm["maxiter"].as<int>(), // maximum number of iterations
+  // 					       vm["v"].as<int>()); // verbosity of the solver */
   
   
-    //Dune::UMFPack<MatrixType>  linsolver(matrix, 0);
-    Dune::InverseOperatorResult res;  
-    x = 0.;
-    linsolver.apply(x, rhs, res);
-    double time = perfTimer.stop();
-    std::cout << "Solve seqgs bicgstab time was " << time << "  " << std::endl;
-    printRes(res);
-  }
+  //   //Dune::UMFPack<MatrixType>  linsolver(matrix, 0);
+  //   Dune::InverseOperatorResult res;  
+  //   x = 0.;
+  //   linsolver.apply(x, rhs, res);
+  //   double time = perfTimer.stop();
+  //   std::cout << "Solve seqgs bicgstab time was " << time << "  " << std::endl;
+  //   printRes(res);
+  // }
   {
     constexpr int pressureEqnIndex = 0;
     constexpr int pressureVarIndex = 0;
@@ -220,7 +227,7 @@ int main(int argc, char **argv)
     
     using Criterion  =
       Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<PressureMatrixType,
-								Dune::Amg::FirstDiagonal> >;
+  								Dune::Amg::FirstDiagonal> >;
     int coarsenTarget=1200;
     int verbose = vm["v"].as<int>();
     Criterion criterion(15, coarsenTarget);
@@ -242,39 +249,39 @@ int main(int argc, char **argv)
     Communication comm;
     //std::shared_ptr<Smoother> smoother;
     using LevelTransferPolicy = Opm::PressureTransferPolicy<FineOperatorType,
-							    CoarseOperatorType,
-							    Communication,
-							    pressureEqnIndex,
-							    pressureVarIndex>;   
+  							    CoarseOperatorType,
+  							    Communication,
+  							    pressureEqnIndex,
+  							    pressureVarIndex>;   
     using CoarseSolverPolicy   =
       Opm::Amg::PressureSolverPolicy<CoarseOperatorType,
-				CoarseSmootherType,
-				Criterion,
-				LevelTransferPolicy>;
+  				CoarseSmootherType,
+  				Criterion,
+  				LevelTransferPolicy>;
     using TwoLevelMethod =
       Dune::Amg::TwoLevelMethod<FineOperatorType,
-				CoarseSolverPolicy,
-				FineSmootherType>;
+  				CoarseSolverPolicy,
+  				FineSmootherType>;
     
     LevelTransferPolicy levelTransferPolicy(comm, weights);
     CoarseSolverPolicy coarseSolverPolicy(smootherArgs, criterion, prm);
 
     FineOperatorType fineoperator(matrix);
     TwoLevelMethod preconditioner(fineoperator,
-				  finesmoother,
-				  levelTransferPolicy,
-				  coarseSolverPolicy,
-				  0,
-				  1);
+  				  finesmoother,
+  				  levelTransferPolicy,
+  				  coarseSolverPolicy,
+  				  0,
+  				  1);
     
 
 
     Dune::MatrixAdapter<MatrixType, VectorType, VectorType> linearOperator(matrix);
     Dune::BiCGSTABSolver<VectorType> linsolver(linearOperator,
-					       preconditioner,
-					       vm["tol"].as<double>(), // desired residual reduction factor
-					       vm["maxiter"].as<int>(), // maximum number of iterations
-					       vm["v"].as<int>()); // verbosity of the solver */
+  					       preconditioner,
+  					       vm["tol"].as<double>(), // desired residual reduction factor
+  					       vm["maxiter"].as<int>(), // maximum number of iterations
+  					       vm["v"].as<int>()); // verbosity of the solver */
   
   
     //Dune::UMFPack<MatrixType>  linsolver(matrix, 0);
@@ -284,6 +291,13 @@ int main(int argc, char **argv)
     double time = perfTimer.stop();
     std::cout << "Solve cpr seqgs bicgstab time was " << time << "  " << std::endl;
     printRes(res);
+    {
+      std::ofstream outfile(resultfile + "_cpr_ilu0_" + ".txt");
+      if(!outfile){
+	throw std::runtime_error("Can not write file");
+      }
+    Dune::writeMatrixMarket(x,outfile);
+    }
   }
   
   
@@ -292,7 +306,7 @@ int main(int argc, char **argv)
   std::cout << "Write result to " << resultfile << std::endl;
   //Dune::writeMatrixMarket(x,std::cout);
   {
-    std::ofstream outfile(resultfile);
+    std::ofstream outfile(resultfile + ".txt");
     if(!outfile){
       throw std::runtime_error("Can not write file");
     }
