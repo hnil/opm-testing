@@ -65,15 +65,18 @@ SET_PROP(EclFlowProblemSimple, CprSmootherFine)
 SET_PROP(EclFlowProblemSimple, CprSmootherCoarse)
     {
     private:
-      typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
-      typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-      typedef typename GET_PROP_TYPE(TypeTag, SparseMatrixAdapter) SparseMatrixAdapter;
-      typedef typename SparseMatrixAdapter::IstlMatrix Matrix;
+      typedef Dune::BCRSMatrix< Dune::FieldMatrix< double, 1, 1 > > PressureMatrixType;
+      typedef Dune::BlockVector< Dune::FieldVector< double, 1 > > PressureVectorType;
+      //typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
+      //typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+      //typedef typename GET_PROP_TYPE(TypeTag, SparseMatrixAdapter) SparseMatrixAdapter;
+      //typedef typename SparseMatrixAdapter::IstlMatrix Matrix;
       typedef Dune::Amg::SequentialInformation POrComm;
       
     public:
       //typedef Opm::ParallelOverlappingILU0<Matrix,Vector,Vector, POrComm> type;
-      typedef Dune::SeqILU0<Matrix,Vector,Vector> type;
+      typedef Dune::SeqILU0<PressureMatrixType, PressureVectorType, PressureVectorType> type;
+      //typedef Dune::SeqILU0<Matrix,Vector,Vector> type;
       //typedef Dune::SeqILU0<Matrix,Vector,Vector, POrComm> type;
 };
 
