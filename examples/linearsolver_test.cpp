@@ -139,22 +139,24 @@ int main(int argc, char **argv)
   std::cout << "Matrix file " << matrixfile << std::endl;
   typedef Dune::BCRSMatrix< Dune::FieldMatrix< double, 3, 3 > > MatrixType;
   typedef Dune::BlockVector< Dune::FieldVector< double, 3 > > VectorType;
-  MatrixType matrix;
-  VectorType rhs;
+  MatrixType matrix_tmp;
+  VectorType rhs_tmp;
   {
     std::ifstream infile(rhsfile);
     if(!infile){
       throw std::runtime_error("Rhs file not read");
     }
-    Dune::readMatrixMarket(rhs,infile);
+    Dune::readMatrixMarket(rhs_tmp,infile);
   }
   {
     std::ifstream infile(matrixfile);
     if(!infile){
       throw std::runtime_error("Matrix file not read");
     }
-    Dune::readMatrixMarket(matrix,infile);
+    Dune::readMatrixMarket(matrix_tmp,infile);
   }
+  const MatrixType matrix(matrix_tmp);
+  const VectorType rhs(rhs_tmp);
   // std::cout << "Rhs is " << std::endl;
   // Dune::writeMatrixMarket(rhs,std::cout);
   // std::cout << "Matrix is " << std::endl;
@@ -177,7 +179,8 @@ int main(int argc, char **argv)
     //Dune::UMFPack<MatrixType>  linsolver(matrix, 0);
     Dune::InverseOperatorResult res;  
     x = 0.;
-    linsolver.apply(x, rhs, res);
+    VectorType rhs_loc(rhs);
+    linsolver.apply(x, rhs_loc, res);
     double time = perfTimer.stop();
     std::cout << "Solve seqilu0 bicgstab time was " << time << std::endl;
     printRes(res);
@@ -288,7 +291,8 @@ int main(int argc, char **argv)
     //Dune::UMFPack<MatrixType>  linsolver(matrix, 0);
     Dune::InverseOperatorResult res;  
     x = 0.;
-    linsolver.apply(x, rhs, res);
+    VectorType rhs_loc(rhs);
+    linsolver.apply(x, rhs_loc, res);
     double time = perfTimer.stop();
     std::cout << "Solve cpr seqgs bicgstab time was " << time << "  " << std::endl;
     printRes(res);
@@ -314,7 +318,8 @@ int main(int argc, char **argv)
 			 FineSmootherType,
 			 CoarseSmootherType,
 			 pressureVarIndex> linsolver(prm);
-    linsolver.prepare(matrix,rhs);
+    VectorType rhs_loc(rhs);
+    linsolver.prepare(matrix,rhs_loc);
     x = 0.;
     linsolver.solve(x);
     double time = perfTimer.stop();
