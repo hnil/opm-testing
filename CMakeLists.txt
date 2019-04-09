@@ -114,6 +114,24 @@ opm_add_test(fluid_test
   SOURCES
     examples/fluid_test)	
 
+opm_add_test(flow_blackoil_cpr_tester
+  ONLY_COMPILE
+  ALWAYS_ENABLE
+  DEPENDS "opmsimulators"
+  LIBRARIES "opmsimulators"
+  SOURCES
+    examples/flow_blackoil_cpr_tester.cpp)	
+
+
+opm_add_test(flow_onephase
+  ONLY_COMPILE
+  ALWAYS_ENABLE
+  DEPENDS "opmsimulators"
+  LIBRARIES "opmsimulators"
+  SOURCES
+  examples/flow_onephase.cpp)	
+	
+
 opm_add_test(linearsolver_test
   ONLY_COMPILE
   ALWAYS_ENABLE
@@ -126,6 +144,7 @@ target_link_libraries(linearsolver_test boost_program_options)
 #install(TARGETS flow_simple DESTINATION bin)
 install(TARGETS fluid_test DESTINATION bin)
 install(TARGETS linearsolver_test DESTINATION bin)
+install(TARGETS flow_blackoil_cpr_tester DESTINATION bin)
 	
 
 #include(OpmBashCompletion)

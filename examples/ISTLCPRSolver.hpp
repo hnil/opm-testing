@@ -22,6 +22,9 @@
 
 #include <utility>
 #include <memory>
+#include "PressureTransferPolicy.hpp"
+#include "PressureSolverPolicy.hpp"
+#include "GetQuasiImpesWeights.hpp"
 BEGIN_PROPERTIES
 NEW_PROP_TAG(CprSmootherFine);
 NEW_PROP_TAG(CprSmootherCoarse);
@@ -29,23 +32,23 @@ END_PROPERTIES
 
 namespace Opm
 {
-//=====================================================================
-// Implementation for ISTL-matrix based operator
-//=====================================================================
-
-
-    /// This class solves the fully implicit black-oil system by
-    /// solving the reduced system (after eliminating well variables)
-    /// as a block-structured matrix (one block for all cell variables) for a fixed
+  //=====================================================================
+  // Implementation for ISTL-matrix based operator
+  //=====================================================================
+  
+  
+  /// This class solves the fully implicit black-oil system by
+  /// solving the reduced system (after eliminating well variables)
+  /// as a block-structured matrix (one block for all cell variables) for a fixed
     /// number of cell variables np .
     /// \tparam MatrixBlockType The type of the matrix block used.
     /// \tparam VectorBlockType The type of the vector block used.
     /// \tparam pressureIndex The index of the pressure component in the vector
     ///                       vector block. It is used to guide the AMG coarsening.
     ///                       Default is zero.
-    template <class TypeTag>
-    class ISTLCprSolver : 
-    {
+  template <class TypeTag>
+  class ISTLCprSolver  
+  {
       typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
       typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
       typedef typename GET_PROP_TYPE(TypeTag, SparseMatrixAdapter) SparseMatrixAdapter;
@@ -66,7 +69,7 @@ namespace Opm
       typedef ISTLSolverEbos<TypeTag> SuperClass;
       typedef Dune::Amg::SequentialInformation POrComm;
       //typedef ISTLUtility::CPRSelector< Matrix, Vector, Vector, POrComm>  CPRSelectorType;
-      typedef Dune::MatrixAdapter<Matrix,Vector, Vector> MatrixAdapter;
+      typedef Dune::MatrixAdapter<MatrixType,VectorType, VectorType> MatrixAdapter;
       
 #if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 6)      
       
@@ -74,14 +77,15 @@ namespace Opm
       static constexpr int category = Dune::SolverCategory::sequential;
       typedef Dune::ScalarProductChooser<Vector, POrComm, category> ScalarProductChooser;
 #endif
-      typedef Dune::BCRSMatrix< Dune::FieldMatrix< double, 1, 1 > > PressureMatrixType;
-      typedef Dune::BlockVector< Dune::FieldVector< double, 1 > > PressureVectorType;
-      //using CoarseOperatorType = Dune::MatrixAdapter<PressureMatrixType,PressureVectorType,PressureVectorType>;
-      //using FineOperatorType = Dune::MatrixAdapter<MatrixType,VectorType,VectorType>;
+    typedef Dune::BCRSMatrix< Dune::FieldMatrix< double, 1, 1 > > PressureMatrixType;
+    typedef Dune::BlockVector< Dune::FieldVector< double, 1 > > PressureVectorType;
+      using CoarseOperatorType = Dune::MatrixAdapter<PressureMatrixType,PressureVectorType,PressureVectorType>;
+      using FineOperatorType = Dune::MatrixAdapter<MatrixType,VectorType,VectorType>;
       //using FineSmootherType = Dune::SeqILU0<MatrixType, VectorType, VectorType>;
       //using CoarseSmootherType = Dune::SeqILU0<PressureMatrixType, PressureVectorType, PressureVectorType>;
       using FineSmootherType = CprSmootherFine;
       using CoarseSmootherType = CprSmootherCoarse;
+    using Communication =  Dune::Amg::SequentialInformation;
       //ParallelInformation = Dune::Amg::SequentialInformation
       //typedef Dune::Amg::AMG<MatrixAdapter,Vector,Smoother,POrComm> DuneAmg;
       using Criterion  =
@@ -89,7 +93,7 @@ namespace Opm
 								  Dune::Amg::FirstDiagonal> >;
       
     public:
-        typedef Dune::AssembledLinearOperator< Matrix, Vector, Vector > AssembledLinearOperatorType;
+    //typedef Dune::AssembledLinearOperator< MatrixType, Vector, Vector > AssembledLinearOperatorType;
 
         static void registerParameters()
         {
@@ -100,14 +104,14 @@ namespace Opm
         /// Construct a system solver.
         /// \param[in] parallelInformation In the case of a parallel run
         ///                                with dune-istl the information about the parallelization.
-        ISTLSolverEbosCpr(const Simulator& simulator)
+        ISTLCprSolver(const Simulator& simulator)
 	  : simulator_(simulator),
 	    iterations_( 0 ),
 	    converged_(false),
 	    criterion_(15,1200)
          {
 	   parameters_.template init<TypeTag>();
-	   prm_["v"].set<int>(this->parameters_.cpr_solver_verbose_);
+	   prm_.put("v",this->parameters_.cpr_solver_verbose_);
 
 	   criterion_.setDebugLevel( this->parameters_.cpr_solver_verbose_ ); 
 	   criterion_.setDefaultValuesIsotropic(2);
@@ -121,10 +125,10 @@ namespace Opm
 
         // nothing to clean here
         void eraseMatrix() {
-            this->matrix_for_preconditioner_.reset();
+	  //this->matrix_for_preconditioner_.reset();
         }
 
-        void prepare(const SparseMatrixAdapter& M, Vector& b){  
+        void prepare(const SparseMatrixAdapter& M, VectorType& b){  
 	  int newton_iteration = this->simulator_.model().newtonMethod().numIterations();
 	  
 #if HAVE_MPI			      	  
@@ -135,7 +139,8 @@ namespace Opm
 	  else
 #endif	    
 	    {
-	      const WellModel& wellModel = this->simulator_.problem().wellModel();
+	      bool update_preconditioner = false;
+	      //const WellModel& wellModel = this->simulator_.problem().wellModel();
 	      if(this->parameters_.cpr_reuse_setup_ < 1){
 		update_preconditioner = true;
 	      }
@@ -150,40 +155,40 @@ namespace Opm
 		}
 	      }
 	      
-	      if( update_preconditioner or (twolevelprec_== 0) ){
+	      if( update_preconditioner or (preconditioner_ == 0) ){
 		rhs_ = &b;
-		matrix_ = &M;
-		weights_(rhs.resize());
-		finesmooter_.reset(new FineSmootherType(matrix,1.0);
-		Opm::Amg::getQuasiImpesWeights(matrix_, pressureVarIndex, weights_);
-		levelTransferPolicy_.reset(new LevelTransferPolicy(comm, weights));		   
-		coarseSolverPolicy_.reset(new CorseSolverPolicy(smootherArgs_, criterion_, prm_));
-		finoperator_.reset(new FineOperator(matrix_));
-		twolevelprec_.reset(new TwoLevelMethod(*fineoperator_,
-						       *finesmoother_,
-						       *levelTransferPolicy_,
-						       *coarseSolverPolicy_,
-						       0,
-						       1)); 
-		linsolve_.reset(new Dune::BiCGSTABSolver<Vector>(*fineOperator,
+		matrix_ = &M.istlMatrix();
+		weights_.resize(rhs_->size());
+		finesmoother_.reset(new FineSmootherType(*matrix_,1.0));
+		Opm::Amg::getQuasiImpesWeights(*matrix_, pressureVarIndex, weights_);
+		levelTransferPolicy_.reset(new LevelTransferPolicy(comm_, weights_));		   
+		coarseSolverPolicy_.reset(new CoarseSolverPolicy(smootherArgs_, criterion_, prm_));
+		fineoperator_.reset(new FineOperatorType(*matrix_));
+		preconditioner_.reset(new TwoLevelMethod(*fineoperator_,
+							 *finesmoother_,
+							 *levelTransferPolicy_,
+							 *coarseSolverPolicy_,
+							 0,
+							 1)); 
+		linsolve_.reset(new Dune::BiCGSTABSolver<VectorType>(*fineoperator_,
 								 *preconditioner_,
 								 this->parameters_.linear_solver_reduction_,
 								 this->parameters_.linear_solver_maxiter_,
 								 this->parameters_.cpr_solver_verbose_));
-  
+		
 	      }else{
 		if(this->parameters_.cpr_solver_verbose_){
 		  std::cout << " Only update amg solver " << std::endl;
 		}
-		Opm::Amg::getQuasiImpesWeights(matrix_, pressureVarIndex, weights_);
-		finesmooter_.reset(new FineSmootherType(matrix,1.0);
-		levelTransferPolicy_->calculateCoarseEntries(*fineOperator);				   
-		amgcpr_->updateSolver(citerion_, matrix_, pinfo_);
+		Opm::Amg::getQuasiImpesWeights(*matrix_, pressureVarIndex, weights_);//set new weights
+		finesmoother_.reset(new FineSmootherType(*matrix_,1.0));//make new finescale smoother
+		levelTransferPolicy_->calculateCoarseEntries(*fineoperator_);// calculate new pressure matrix
+		preconditioner_->updateSolver(criterion_, *matrix_, comm_);//pinfo_);//update coarse solver matrices and smoothers
 	      }
 	    }	  
         }
       
-        bool solve(Vector& x) {
+        bool solve(VectorType& x) {
 	  if( this->isParallel() ){
 	    // for now only call the superclass
 	    //bool converged = SuperClass::solve(x);
@@ -191,7 +196,7 @@ namespace Opm
 	  }else{
 	    // Solve system.
 	    Dune::InverseOperatorResult result;
-	    Vector& istlb = *(this->rhs_);
+	    VectorType& istlb = *(this->rhs_);
 	    linsolve_->apply(x, istlb, result);
 	    checkConvergence(result);
 	    
@@ -226,16 +231,30 @@ namespace Opm
 	    OPM_THROW_NOLOG(NumericalIssue, msg);
 	  }
         }
-    protected:      
+    
+    void setResidual(VectorType& /* b */) {
+      // rhs_ = &b; // Must be handled in prepare() instead.
+    }
+    
+    void getResidual(VectorType& b) const {
+      b = *rhs_;
+    }
+    
+    void setMatrix(const SparseMatrixAdapter& /* M */) {
+            // matrix_ = &M.istlMatrix(); // Must be handled in prepare() instead.
+    }
+  protected:      
 // #if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 6)      
 //       typedef std::shared_ptr< Dune::ScalarProduct<Vector> > SPPointer;
 // #else      
 //       typedef std::unique_ptr<typename ScalarProductChooser::ScalarProduct> SPPointer;
 // #endif
+	
+	
       std::shared_ptr<FineSmootherType> finesmoother_;
       using LevelTransferPolicy = Opm::PressureTransferPolicy<FineOperatorType,
 							      CoarseOperatorType,
-							      comm_,
+							      Communication,
 							      pressureEqnIndex,
 							      pressureVarIndex>;   
       using CoarseSolverPolicy   =
@@ -248,22 +267,27 @@ namespace Opm
 				  CoarseSolverPolicy,
 				  FineSmootherType>;
 
-
+      const Simulator& simulator_;
+      mutable int iterations_;
+      mutable bool converged_;
+        
       
-      std::unique<LevelTransferPolicy> levelTransferPolicy_;
-      std::unique_prt<CoarseSolverPolicy> coarseSolverPolicy_;
+      std::unique_ptr<LevelTransferPolicy> levelTransferPolicy_;
+      std::unique_ptr<CoarseSolverPolicy> coarseSolverPolicy_;
       std::unique_ptr<FineOperatorType> fineoperator_;
       std::unique_ptr<TwoLevelMethod> preconditioner_;
-      std::unique_ptr< Dune::BiCGSTABSolver<Vector> > linsolve_;
-      MatrixType& matrix_;
-      VectorType& rhs_;
+      std::unique_ptr< Dune::BiCGSTABSolver<VectorType> > linsolve_;
+      MatrixType* matrix_;
+      VectorType* rhs_;
+      VectorType weights_;
       pt::ptree prm_;
       FlowLinearSolverParameters parameters_;
       typedef typename Dune::Amg::SmootherTraits<CoarseSmootherType>::Arguments  SmootherArgs;
-      using Communication =  Dune::Amg::SequentialInformation;
+      
       Communication comm_;
       Criterion criterion_;
       SmootherArgs  smootherArgs_;
+      
     }; // end ISTLSolver
 
 } // namespace Opm

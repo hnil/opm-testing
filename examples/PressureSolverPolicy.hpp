@@ -12,6 +12,14 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/common/version.hh>
 
+#include <boost/property_tree/ptree.hpp>        // pt::ptree
+//#include <boost/property_tree/ini_parser.hpp> 
+#include <boost/property_tree/ptree.hpp>
+//#include <boost/property_tree/json_parser.hpp>
+//namespace po = boost::program_options;
+namespace pt = boost::property_tree;
+
+
 namespace Opm{
   namespace Amg {
     template<class O, class S, class C, class P>

@@ -2,15 +2,17 @@
 #define OPM_GET_QUASI_IMPES_WEIGHTS_HEADER_INCLUDED
 
 namespace Opm{
-  template <class DenseMatrix>
-  DenseMatrix transposeDenseMatrix(const DenseMatrix& M)
-  {
-    DenseMatrix tmp;
-    for (int i = 0; i < M.rows; ++i)
+  namespace Details{
+    template <class DenseMatrix>
+    DenseMatrix transposeDenseMatrix(const DenseMatrix& M)
+    {
+      DenseMatrix tmp;
+      for (int i = 0; i < M.rows; ++i)
       for (int j = 0; j < M.cols; ++j)
 	tmp[j][i] = M[i][j];
-    
-    return tmp;
+      
+      return tmp;
+    }
   }
   namespace Amg{
     template<class Matrix, class Vector>
@@ -34,7 +36,7 @@ namespace Opm{
 	  }
 	}
 	BlockVector bweights;
-	auto diag_block_transpose = Opm::transposeDenseMatrix(diag_block);
+	auto diag_block_transpose = Opm::Details::transposeDenseMatrix(diag_block);
 	diag_block_transpose.solve(bweights, rhs);
 	double abs_max =
 	  *std::max_element(
