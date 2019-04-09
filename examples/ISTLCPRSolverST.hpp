@@ -91,7 +91,7 @@ namespace Opm
 	converged_(false),
 	criterion_(15,1200)
     {
-      criterion_.setDebugLevel(prm_.get<int>("v")); 
+      criterion_.setDebugLevel(prm_.get<int>("cpr_verbosity")); 
       criterion_.setDefaultValuesIsotropic(2);
       criterion_.setNoPostSmoothSteps( 1 );
       criterion_.setNoPreSmoothSteps( 1 );
