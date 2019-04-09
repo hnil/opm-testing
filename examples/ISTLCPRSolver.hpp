@@ -93,8 +93,13 @@ namespace Opm
     {
       parameters_.template init<TypeTag>();
       pt::ptree prm;
-      prm.put("v",parameters_.cpr_solver_verbose_);
-      prm.put("reuse_setup",parameters_.cpr_reuse_setup_);
+      prm.put("tol",parameters_.linear_solver_reduction_);
+      prm.put("maxiter",parameters_.linear_solver_maxiter_);
+      prm.put("verbosity",parameters_.linear_solver_verbosity_);
+      prm.put("cpr_verbosity",parameters_.cpr_solver_verbose_);
+      //prm.put("cpr_reuse_setup",parameters_.cpr_reuse_setup_);
+      prm.put("cpr_ell_solvetype",parameters_.cpr_ell_solvetype_);
+      prm.put("cpr_max_ell_iter",parameters_.cpr_max_ell_iter_);
       //prm.put("use_drs",parameters_.cpr_use_drs_);
       solver_.reset(new SolverType(prm));
     }

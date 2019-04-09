@@ -97,11 +97,11 @@ namespace Opm{
 	  Dune::Preconditioner<X,X>* prec = amg_.get();
 	  // Linear solver parameters
 	  const double tolerance = 1e-2;//param_->cpr_solver_tol_;
-	  const int maxit        = 1;//param_->cpr_max_ell_iter_;
-	  const int verbosity    = prm_.get<int>("v");//( param_->cpr_solver_verbose_ &&
+	  const int maxit        = prm_.get<int>("cpr_max_ell_iter");
+	  const int verbosity    = prm_.get<int>("cpr_verbosity");//( param_->cpr_solver_verbose_ &&
 				     //comm_.communicator().rank()==0 ) ? 1 : 0;
-	  const int solver_type=2;//
-	  if ( solver_type == 1 )
+	  const int solver_type= prm_.get<int>("cpr_ell_solvetype");//
+	  if ( solver_type == 0 )
             {
 	      // Category of preconditioner will be checked at compile time. Therefore we need
 	      // to cast to the derived class

@@ -133,10 +133,10 @@ namespace Opm
 								 *preconditioner_,
 								 prm_.get<double>("tol"),
 								 prm_.get<int>("maxiter"),
-								 prm_.get<int>("v")));
+								 prm_.get<int>("verbosity")));
 		
 	  }else{
-	    if(prm_.get<int>("v")>0){
+	    if(prm_.get<int>("cpr_verbosity")>0){
 	      std::cout << " Only update amg solver " << std::endl;
 	    }
 	    Opm::Amg::getQuasiImpesWeights(*matrix_, pressureVarIndex, weights_);//set new weights

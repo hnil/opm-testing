@@ -56,14 +56,16 @@ int main(int argc, char **argv)
   try {
         po::options_description desc("Allowed options");
         desc.add_options()
-            ("help", "produce help message")
+	  ("help", "produce help message")
 	  ("inputdir", po::value<std::string>(), "input directory")
 	  ("outputdir", po::value<std::string>(), "input directory")
 	  ("prefix", po::value<std::string>(), "prefix")
 	  ("tol", po::value<double>()->default_value(1e-2), "tolerance")
-	  ("v", po::value<int>()->default_value(10), "verbose")
+	  ("verbosity", po::value<int>()->default_value(10), "verbosity")
 	  ("maxiter", po::value<int>()->default_value(200), "maxiter")
-	  ("reuse_setup", po::value<int>()->default_value(0), "resuse_setup")
+	  ("cpr_verbosity", po::value<int>()->default_value(10), "cpr verbosity")
+	  ("cpr_ell_solver_type", po::value<int>()->default_value(2), "cpr solver type")
+	  ("cpr_max_ell_iter", po::value<int>()->default_value(2), "cpr maxiter")
         ;
 
         
@@ -75,13 +77,6 @@ int main(int argc, char **argv)
             return 0;
         }
 
-        if (vm.count("tol")) {
-	  std::cout << "Tolerance " 
-                 << vm["tol"].as<double>() << ".\n";
-        } else {
-	  std::cout << "Tolerance not set.\n";
-	  return 1;
-        }
 	if (vm.count("inputdir")) {
 	  std::cout << "input directory " 
 		    << vm["inputdir"].as<std::string>() << ".\n";
@@ -101,13 +96,6 @@ int main(int argc, char **argv)
 		    << vm["prefix"].as<std::string>() << ".\n";
         } else {
 	  std::cout << "Prefix directory not set.\n";
-	  return 1;
-        }
-	if (vm.count("v")) {
-	  std::cout << "v " 
-		    << vm["v"].as<int>() << ".\n";
-        } else {
-	  std::cout << "verbose directory not set.\n";
 	  return 1;
         }
     }
