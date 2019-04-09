@@ -11,7 +11,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/version.hh>
-
+#include <opm/autodiff/amgcpr.hh>
 #include <boost/property_tree/ptree.hpp>        // pt::ptree
 //#include <boost/property_tree/ini_parser.hpp> 
 #include <boost/property_tree/ptree.hpp>
@@ -40,7 +40,7 @@ namespace Opm{
       /** @brief The type of the arguments used for constructing the smoother. */
       typedef typename Dune::Amg::SmootherTraits<S>::Arguments SmootherArgs;
       /** @brief The type of the AMG construct on the coarse level.*/
-      typedef Dune::Amg::AMG<Operator,X,Smoother,Communication> AMGType;
+      typedef Dune::Amg::AMGCPR<Operator,X,Smoother,Communication> AMGType;
       /**
        * @brief Constructs the coarse solver policy.
        * @param args The arguments used for constructing the smoother.
@@ -72,9 +72,9 @@ namespace Opm{
 	  amg_.reset(new AMGType(op, crit, args, comm));
         }
 
-	// void updateAmgPreconditioner(typename AMGType::Operator& op){
-// 	  amg_->updateSolver(crit_, op, comm_);
-// 	}
+	void updateAmgPreconditioner(typename AMGType::Operator& op){
+	  amg_->updateSolver(crit_, op, comm_);
+ 	}
 #if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 6)
          Dune::SolverCategory::Category category() const override
         {

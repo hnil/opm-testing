@@ -24,10 +24,9 @@ namespace Opm
   template<class FineOperator,
 	   class CoarseOperator,
 	   class Communication,
-	   std::size_t COMPONENT_INDEX,
 	   std::size_t VARIABLE_INDEX>
     class PressureTransferPolicy
-      : public Dune::Amg::LevelTransferPolicy<FineOperator, CoarseOperator>
+      : public Dune::Amg::LevelTransferPolicyCpr<FineOperator, CoarseOperator>
     {
     public:
        typedef Dune::Amg::LevelTransferPolicy<FineOperator,CoarseOperator> FatherType;
@@ -152,7 +151,7 @@ namespace Opm
       }
     private:
       Communication* communication_;
-      FineVectorType weights_;      
+      const FineVectorType& weights_;      
       std::shared_ptr<Communication> coarseLevelCommunication_;
       std::shared_ptr<typename CoarseOperator::matrix_type> coarseLevelMatrix_;
     };

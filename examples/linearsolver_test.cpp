@@ -34,6 +34,7 @@ void printRes(Dune::InverseOperatorResult& res){
 #include "PressureSolverPolicy.hpp"
 #include "PressureTransferPolicy.hpp"
 #include "GetQuasiImpesWeights.hpp"
+#include "ISTLCPRSolverST.hpp"
 
 void translate_variables_map_to_ptree(po::variables_map &vm, pt::ptree &propTree){
 
@@ -62,6 +63,7 @@ int main(int argc, char **argv)
 	  ("tol", po::value<double>()->default_value(1e-2), "tolerance")
 	  ("v", po::value<int>()->default_value(10), "verbose")
 	  ("maxiter", po::value<int>()->default_value(200), "maxiter")
+	  ("reuse_setup", po::value<int>()->default_value(0), "resuse_setup")
         ;
 
         
@@ -208,7 +210,7 @@ int main(int argc, char **argv)
   //   printRes(res);
   // }
   {
-    constexpr int pressureEqnIndex = 0;
+    //constexpr int pressureEqnIndex = 0;
     constexpr int pressureVarIndex = 0;
     VectorType weights(rhs.size());
     Opm::Amg::getQuasiImpesWeights(matrix, pressureVarIndex, weights);
@@ -251,7 +253,6 @@ int main(int argc, char **argv)
     using LevelTransferPolicy = Opm::PressureTransferPolicy<FineOperatorType,
   							    CoarseOperatorType,
   							    Communication,
-  							    pressureEqnIndex,
   							    pressureVarIndex>;   
     using CoarseSolverPolicy   =
       Opm::Amg::PressureSolverPolicy<CoarseOperatorType,
@@ -259,9 +260,9 @@ int main(int argc, char **argv)
   				Criterion,
   				LevelTransferPolicy>;
     using TwoLevelMethod =
-      Dune::Amg::TwoLevelMethod<FineOperatorType,
-  				CoarseSolverPolicy,
-  				FineSmootherType>;
+      Dune::Amg::TwoLevelMethodCpr<FineOperatorType,
+				   CoarseSolverPolicy,
+				   FineSmootherType>;
     
     LevelTransferPolicy levelTransferPolicy(comm, weights);
     CoarseSolverPolicy coarseSolverPolicy(smootherArgs, criterion, prm);
@@ -299,7 +300,35 @@ int main(int argc, char **argv)
     Dune::writeMatrixMarket(x,outfile);
     }
   }
-  
+  {
+    Dune::Timer perfTimer;
+    perfTimer.start();
+
+    constexpr int pressureVarIndex = 0;
+    typedef Dune::BCRSMatrix< Dune::FieldMatrix< double, 1, 1 > > PressureMatrixType;
+    typedef Dune::BlockVector< Dune::FieldVector< double, 1 > > PressureVectorType;
+    using FineSmootherType = Dune::SeqILU0<MatrixType, VectorType, VectorType>;
+    using CoarseSmootherType = Dune::SeqILU0<PressureMatrixType, PressureVectorType, PressureVectorType>;
+    Opm::ISTLCprSolverST<MatrixType,
+			 VectorType,
+			 FineSmootherType,
+			 CoarseSmootherType,
+			 pressureVarIndex> linsolver(prm);
+    linsolver.prepare(matrix,rhs);
+    x = 0.;
+    linsolver.solve(x);
+    double time = perfTimer.stop();
+    std::cout << "Solve istl cpr seqgs bicgstab time was " << time << "  " << std::endl;
+    Dune::InverseOperatorResult res = linsolver.getResult();
+    printRes(res);
+    {
+      std::ofstream outfile(resultfile + "_istl_cpr_ilu0_" + ".txt");
+      if(!outfile){
+	throw std::runtime_error("Can not write file");
+      }
+    Dune::writeMatrixMarket(x,outfile);
+    }
+  }
   
   //
   std::cout <<"***********************" << std::endl;
