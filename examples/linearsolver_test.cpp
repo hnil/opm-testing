@@ -64,8 +64,8 @@ int main(int argc, char **argv)
 	  ("verbosity", po::value<int>()->default_value(10), "verbosity")
 	  ("maxiter", po::value<int>()->default_value(200), "maxiter")
 	  ("cpr_verbosity", po::value<int>()->default_value(10), "cpr verbosity")
-	  ("cpr_ell_solver_type", po::value<int>()->default_value(2), "cpr solver type")
-	  ("cpr_max_ell_iter", po::value<int>()->default_value(2), "cpr maxiter")
+	  ("cpr_ell_solvetype", po::value<int>()->default_value(2), "cpr solver type")
+	  ("cpr_max_ell_iter", po::value<int>()->default_value(1), "cpr maxiter")
         ;
 
         
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
 					       preconditioner,
 					       vm["tol"].as<double>(), // desired residual reduction factor
 					       vm["maxiter"].as<int>(), // maximum number of iterations
-					       vm["v"].as<int>()); // verbosity of the solver */
+					       vm["verbosity"].as<int>()); // verbosity of the solver */
   
   
     //Dune::UMFPack<MatrixType>  linsolver(matrix, 0);
@@ -202,7 +202,7 @@ int main(int argc, char **argv)
   // }
   {
     //constexpr int pressureEqnIndex = 0;
-    constexpr int pressureVarIndex = 0;
+    constexpr int pressureVarIndex = 1;
     VectorType weights(rhs.size());
     Opm::Amg::getQuasiImpesWeights(matrix, pressureVarIndex, weights);
     Dune::Timer perfTimer;
@@ -222,7 +222,7 @@ int main(int argc, char **argv)
       Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<PressureMatrixType,
   								Dune::Amg::FirstDiagonal> >;
     int coarsenTarget=1200;
-    int verbose = vm["v"].as<int>();
+    int verbose = vm["cpr_verbosity"].as<int>();
     Criterion criterion(15, coarsenTarget);
     criterion.setDebugLevel( verbose ); // no debug information, 1 for printing hierarchy information
     criterion.setDefaultValuesIsotropic(2);
@@ -273,7 +273,7 @@ int main(int argc, char **argv)
   					       preconditioner,
   					       vm["tol"].as<double>(), // desired residual reduction factor
   					       vm["maxiter"].as<int>(), // maximum number of iterations
-  					       vm["v"].as<int>()); // verbosity of the solver */
+  					       vm["verbosity"].as<int>()); // verbosity of the solver */
   
   
     //Dune::UMFPack<MatrixType>  linsolver(matrix, 0);
@@ -292,11 +292,12 @@ int main(int argc, char **argv)
     Dune::writeMatrixMarket(x,outfile);
     }
   }
+
   {
     Dune::Timer perfTimer;
     perfTimer.start();
 
-    constexpr int pressureVarIndex = 0;
+    constexpr int pressureVarIndex = 1;
     typedef Dune::BCRSMatrix< Dune::FieldMatrix< double, 1, 1 > > PressureMatrixType;
     typedef Dune::BlockVector< Dune::FieldVector< double, 1 > > PressureVectorType;
     using FineSmootherType = Dune::SeqILU0<MatrixType, VectorType, VectorType>;
@@ -322,7 +323,7 @@ int main(int argc, char **argv)
     Dune::writeMatrixMarket(x,outfile);
     }
   }
-  
+
   //
   std::cout <<"***********************" << std::endl;
   std::cout << "Write result to " << resultfile << std::endl;
