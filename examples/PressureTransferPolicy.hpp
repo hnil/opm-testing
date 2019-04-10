@@ -68,7 +68,6 @@ namespace Opm
 		  matrix_el += (*col)[i][VARIABLE_INDEX]*bw[i];
 		}
 		*coarseCol = matrix_el;
-		//*coarseCol = (*col)[COMPONENT_INDEX][VARIABLE_INDEX];
 	      }
 	    ++coarseRow;
 	  }
@@ -101,7 +100,6 @@ namespace Opm
 		}		
       		const auto& j = entry.index();
 		(*coarseLevelMatrix_)[i][j] = matrix_el;
-      		//(*coarseLevelMatrix_)[i][j] += (*entry)[COMPONENT_INDEX][VARIABLE_INDEX];
       	      }
       	  }
       }
@@ -121,7 +119,6 @@ namespace Opm
 	      rhs_el += (*block)[i]*bw[i];
 	    }
 	    this->rhs_[block-begin] = rhs_el;
-	    //this->rhs_[block-begin] = (*block)[COMPONENT_INDEX];
 	  }
         
 
