@@ -26,7 +26,10 @@
 #include "PressureSolverPolicy.hpp"
 #include "GetQuasiImpesWeights.hpp"
 #include "ISTLCPRSolverST.hpp"
+#include <dune/istl/matrixmarket.hh>
+#include <ewoms/linear/matrixblock.hh>
 
+#include <ewoms/linear/matrixmarket_ewoms.hh>
 BEGIN_PROPERTIES
 NEW_PROP_TAG(CprSmootherFine);
 NEW_PROP_TAG(CprSmootherCoarse);
@@ -111,6 +114,9 @@ namespace Opm
 
     void prepare(const SparseMatrixAdapter& M, VectorType& b){  
       int newton_iteration = this->simulator_.model().newtonMethod().numIterations();
+      if((parameters_.linear_solver_verbosity_ > 5)){
+	rhs_org_ = b;
+      }
       
 #if HAVE_MPI			      	  
       if( this->isParallel() )
@@ -130,12 +136,15 @@ namespace Opm
 	      update_preconditioner = true;
 	    }
 	  }
-	  if(this->parameters_.cpr_reuse_setup_ < 3){
-	    if( this->iterations() > 10){
+	  if(this->parameters_.cpr_reuse_setup_ < 100){
+	    if( this->iterations() > this->parameters_.cpr_reuse_setup_){
 	      update_preconditioner = true;
 	    }
 	  }
 	  const MatrixType& matrix(M.istlMatrix());
+	  if((parameters_.linear_solver_verbosity_ > 5)){
+	    matrix_.reset(new MatrixType(matrix));
+	  }
 	  solver_->prepare(matrix,b, update_preconditioner);
 	}	  
     }
@@ -148,6 +157,38 @@ namespace Opm
 	return false;
       }else{
 	bool converged = solver_->solve(x);
+	if((parameters_.linear_solver_verbosity_ > 5) &&
+	   (solver_->iterations() > parameters_.linear_solver_verbosity_)) {		
+	  std::string dir = simulator_.problem().outputDir();
+	  if (dir == ".")
+	    dir = "";
+	  else if (!dir.empty() && dir.back() != '/')
+	    dir += "/";
+	  namespace fs = boost::filesystem;
+	  fs::path output_dir(dir);
+	  fs::path subdir("reports");
+	  output_dir = output_dir / subdir;
+	  if(!(fs::exists(output_dir))){
+	    fs::create_directory(output_dir);
+	  }
+	  // Combine and return.
+	  std::ostringstream oss;
+	  oss << "prob_" << simulator_.episodeIndex() << "_";
+	  oss << simulator_.time() << "_";
+	  std::string output_file(oss.str());
+	  fs::path full_path = output_dir / output_file;
+	  std::string prefix = full_path.string();
+	  {
+	    std::string filename = prefix + "matrix_istl.txt";
+	    std::ofstream filem(filename);
+	    Dune::writeMatrixMarket(*matrix_, filem);
+	  }
+	  {
+	    std::string filename = prefix + "rhs_istl.txt";
+	    std::ofstream fileb(filename);
+	    Dune::writeMatrixMarket(rhs_org_, fileb);
+	  }
+	}
 	return converged;
       }
     }	
@@ -187,6 +228,9 @@ namespace Opm
       
     std::unique_ptr< SolverType > solver_;
     FlowLinearSolverParameters parameters_;
+    // only for debugging liner solver
+    VectorType rhs_org_;
+    std::unique_ptr<MatrixType> matrix_;
   }; // end ISTLSolver
 
 } // namespace Opm
