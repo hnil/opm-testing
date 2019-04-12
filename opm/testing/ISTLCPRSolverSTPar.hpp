@@ -55,24 +55,25 @@ namespace Opm
     //enum { pressureEqnIndex = BlackOilDefaultIndexTraits::waterCompIdx };
     //enum { pressureVarIndex = Indices::pressureSwitchIdx };
     //typedef WellModelMatrixAdapter< Matrix, Vector, Vector, WellModel, false> OperatorSerial;
-    typedef Dune::Amg::SequentialInformation POrComm;
-    typedef Dune::MatrixAdapter<MatrixType,VectorType, VectorType> MatrixAdapter;
-    
-#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 6)      
-    
-#else
-    static constexpr int category = Dune::SolverCategory::sequential;
-    typedef Dune::ScalarProductChooser<Vector, POrComm, category> ScalarProductChooser;
-#endif
+    //typedef Dune::Amg::SequentialInformation POrComm;
+    typedef std::size_t GlobalId; // The type for the global index
+    typedef Dune::OwnerOverlapCopyCommunication<GlobalId> Communication;
     typedef Dune::BCRSMatrix< Dune::FieldMatrix< double, 1, 1 > > PressureMatrixType;
     typedef Dune::BlockVector< Dune::FieldVector< double, 1 > > PressureVectorType;
-    using CoarseOperatorType = Dune::MatrixAdapter<PressureMatrixType, PressureVectorType, PressureVectorType>;
-    using FineOperatorType = Dune::MatrixAdapter<MatrixType, VectorType, VectorType>;
+    using CoarseOperatorType = Dune::OverlappingSchwarzOperator<PressureMatrixType,
+								PressureVectorType,
+								PressureVectorType,
+								Communication>;
+    using FineOperatorType = Dune::OverlappingSchwarzOperator<MatrixType,
+							      VectorType,
+							      VectorType,
+							      Communication>;
     //using FineSmootherType = Dune::SeqILU0<MatrixType, VectorType, VectorType>;
     //using CoarseSmootherType = Dune::SeqILU0<PressureMatrixType, PressureVectorType, PressureVectorType>;
     using FineSmootherType = CprSmootherFine;
     using CoarseSmootherType = CprSmootherCoarse;
-    using Communication =  Dune::Amg::SequentialInformation;
+
+    //using Communication =  Dune::Amg::SequentialInformation;
     using Criterion  =
       Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<PressureMatrixType,
 								Dune::Amg::FirstDiagonal> >;
@@ -206,7 +207,7 @@ namespace Opm
 	//reinterpret_cast<AmgType*>(preconditioner_->updatePreconditioner(opARef, smootherArgs, comm);
       }
     }	  
-    }
+    
     bool isParallel(){
       return false;
     }
@@ -296,13 +297,14 @@ namespace Opm
     pt::ptree prm_;
     typedef typename Dune::Amg::SmootherTraits<CoarseSmootherType>::Arguments  SmootherArgs;
       
-    Communication comm_;
+    std::shared_ptr<Communication> comm_;
     Criterion criterion_;
     SmootherArgs  smootherArgs_;
     Dune::InverseOperatorResult res_;
-    SPPointer sp_;
-    using POrComm =  Dune::OwnerOverlapCopyCommunication<int,int>;
-    std::shared_ptr<POrComm> comm_;
+    Dune::OverlappingSchwarzScalarProduct<VectorType,Communication> sp_;
+    std::shared_ptr<OperatorParallel> opAParallel_;
+    //using POrComm =  Dune::OwnerOverlapCopyCommunication<int,int>;
+    //std::shared_ptr<POrComm> comm_;
   }; // end ISTLSolver
 
 } // namespace Opm

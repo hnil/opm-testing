@@ -31,10 +31,10 @@ void printRes(Dune::InverseOperatorResult& res){
   std::cout << "Solver  conv_rate  " << res.conv_rate << std::endl;
 }
 
-#include "PressureSolverPolicy.hpp"
-#include "PressureTransferPolicy.hpp"
-#include "GetQuasiImpesWeights.hpp"
-#include "ISTLCPRSolverST.hpp"
+#include <opm/testing/PressureSolverPolicy.hpp>
+#include <opm/testing/PressureTransferPolicy.hpp>
+#include <opm/testing/GetQuasiImpesWeights.hpp>
+#include <opm/testing/ISTLCPRSolverST.hpp>
 
 void translate_variables_map_to_ptree(po::variables_map &vm, pt::ptree &propTree){
 

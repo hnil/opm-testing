@@ -22,7 +22,7 @@
 #include "flow/flow_tag.hpp"
 //#include <opm/linearsolvers/amgclsolverbackend.hh>
 #include  <opm/autodiff/ISTLSolverEbosCpr.hpp>
-#include  "ISTLCPRSolver.hpp"
+#include  <opm/testing/ISTLCPRSolver.hpp>
 //#include <ewoms/linear/superlubackend.hh>
 
 BEGIN_PROPERTIES
