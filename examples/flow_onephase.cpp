@@ -21,55 +21,13 @@
 #include "config.h"
 #include "flow/flow_tag.hpp"
 #include <ewoms/models/blackoil/blackoilonephaseindices.hh>
-BEGIN_PROPERTIES
-NEW_TYPE_TAG(EclFlowProblemSimple, INHERITS_FROM(EclFlowProblem));
-NEW_PROP_TAG(FluidState);
-
-
-SET_PROP(EclFlowProblemSimple, FluidState)
-    {
-    private:
-      typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-      typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-      enum { enableTemperature = GET_PROP_VALUE(TypeTag, EnableTemperature) };
-      enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
-      enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-      enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
-      typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-      typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
-      static const bool compositionSwitchEnabled = Indices::gasEnabled;
-    public:
-      //typedef Opm::BlackOilFluidSystemSimple<Scalar> type;
-      typedef Opm::BlackOilFluidState<Evaluation, FluidSystem, enableTemperature, enableEnergy, compositionSwitchEnabled,  Indices::numPhases > type;
-    };
-//SET_BOOL_PROP(EclFlowProblemSimple,MatrixAddWellContributions,true);
-END_PROPERTIES
-
-namespace Ewoms {
-  namespace Properties {
-    SET_PROP(EclFlowProblemSimple, FluidSystem)
-    {
-    private:
-      //typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-      typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-      typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
-
-    public:
-        typedef Opm::BlackOilFluidSystem<Scalar> type;
-    };
-
-    //NEW_TYPE_TAG(EclFlowProblem, INHERITS_FROM(BlackOilModel, EclBaseProblem));
-    SET_TYPE_PROP(EclFlowProblemSimple, IntensiveQuantities, Ewoms::BlackOilIntensiveQuantities<TypeTag>);
-    SET_TYPE_PROP(EclFlowProblemSimple, LinearSolverBackend, Opm::ISTLSolverEbos<TypeTag>);
-
-
-    
-  }
-}
 
 
 namespace Ewoms {
   namespace Properties {
+    NEW_TYPE_TAG(EclFlowProblemSimple, INHERITS_FROM(EclFlowProblem));
+    NEW_PROP_TAG(FluidState);
+    NEW_PROP_TAG(FluidSystem);
     //! The indices required by the model
     SET_PROP(EclFlowProblemSimple, Indices)
     {
@@ -86,7 +44,39 @@ namespace Ewoms {
 					     GET_PROP_VALUE(TypeTag, EnableEnergy),
 					     /*PVOffset=*/0,
 					     /*enebledCompIdx=*/FluidSystem::waterCompIdx> type;
+      
     };
+    SET_PROP(EclFlowProblemSimple, FluidState)
+    {
+    private:
+      typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+      typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+      enum { enableTemperature = GET_PROP_VALUE(TypeTag, EnableTemperature) };
+      enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
+      enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+      enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+      typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+      typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
+      static const bool compositionSwitchEnabled = Indices::gasEnabled;
+      
+    public:
+      //typedef Opm::BlackOilFluidSystemSimple<Scalar> type;
+      typedef Opm::BlackOilFluidState<Evaluation, FluidSystem, enableTemperature, enableEnergy, compositionSwitchEnabled,  Indices::numPhases > type;
+    };
+
+    // SET_PROP(EclFlowProblemSimple, FluidSystem)
+    // {
+    // private:
+    //   //typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    //   typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    //   typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
+    //   typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+      
+    // public:
+    //   typedef Opm::BlackOilFluidSystem<Scalar,Indices> type;
+    // };
+
+    
   }
 }
 

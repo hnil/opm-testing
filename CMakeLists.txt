@@ -149,7 +149,8 @@ opm_add_test(linearsolver_test_mpi
     examples/linearsolver_test_mpi.cpp)	
 
 	
-target_link_libraries(linearsolver_test boost_program_options)	
+target_link_libraries(linearsolver_test boost_program_options)
+target_link_libraries(linearsolver_test_mpi boost_program_options boost_serialization boost_mpi)		
 #install(TARGETS flow_simple DESTINATION bin)
 install(TARGETS fluid_test DESTINATION bin)
 install(TARGETS linearsolver_test DESTINATION bin)

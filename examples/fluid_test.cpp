@@ -225,7 +225,7 @@ int main(int argc, char **argv)
     Opm::ErrorGuard errorGuard;
     
     Opm::Deck deck = parser.parseFile(deckFilename , parseContext, errorGuard);
-    Opm::checkDeck(deck, parser);
+    Opm::checkDeck(deck, parser, parseContext, errorGuard);
     Opm::MissingFeatures::checkKeywords(deck);
     
     Opm::Runspec runspec( deck );
