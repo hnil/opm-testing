@@ -131,6 +131,14 @@ opm_add_test(flow_onephase
   SOURCES
   examples/flow_onephase.cpp)	
 	
+opm_add_test(flow_onephase_energy
+  ONLY_COMPILE
+  ALWAYS_ENABLE
+  DEPENDS "opmsimulators"
+  LIBRARIES "opmsimulators"
+  SOURCES
+  examples/flow_onephase_energy.cpp)	
+
 
 opm_add_test(linearsolver_test
   ONLY_COMPILE
