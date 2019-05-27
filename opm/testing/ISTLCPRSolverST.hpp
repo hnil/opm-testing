@@ -25,7 +25,7 @@
 #include "PressureTransferPolicy.hpp"
 #include "PressureSolverPolicy.hpp"
 #include "GetQuasiImpesWeights.hpp"
-#include <opm/autodiff/twolevelmethodcpr.hh>
+#include <opm/simulators/linalg/twolevelmethodcpr.hh>
 namespace Opm
 {
   //=====================================================================

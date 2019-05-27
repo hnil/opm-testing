@@ -1,11 +1,11 @@
 #ifndef OPM_PRESSURE_TRANSFER_POLICY_HEADER_INCLUDED
 #define OPM_PRESSURE_TRANSFER_POLICY_HEADER_INCLUDED
 
-#include <opm/autodiff/twolevelmethodcpr.hh>
-#include <opm/autodiff/ParallelOverlappingILU0.hpp>
+#include <opm/simulators/linalg/twolevelmethodcpr.hh>
+#include <opm/simulators/linalg/ParallelOverlappingILU0.hpp>
 //#include <opm/autodiff/FlowLinearSolverParameters.hpp>
 //#include <opm/autodiff/CPRPreconditioner.hpp>
-#include <opm/autodiff/amgcpr.hh>
+#include <opm/simulators/linalg/amgcpr.hh>
 #include <dune/istl/paamg/twolevelmethod.hh>
 #include <dune/istl/paamg/aggregates.hh>
 #include <dune/istl/bvector.hh>

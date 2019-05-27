@@ -11,7 +11,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/version.hh>
-#include <opm/autodiff/amgcpr.hh>
+#include <opm/simulators/linalg/amgcpr.hh>
 #include <boost/property_tree/ptree.hpp>        // pt::ptree
 //#include <boost/property_tree/ini_parser.hpp> 
 #include <boost/property_tree/ptree.hpp>
